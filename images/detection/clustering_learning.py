@@ -46,17 +46,16 @@ def get_images(input_dir):
 
 
 def get_similar(k, img_mat):
-	img_mat = np.double(np.vstack(img_mat))
-	img_mat = img_mat.T
+    img_mat = np.double(np.vstack(img_mat))
+    img_mat = img_mat.T
 
-	sg_img_mat_features = RealFeatures(img_mat)
+    sg_img_mat_features = RealFeatures(img_mat)
 
-	distance = EuclideanDistance(sg_img_mat_features, sg_img_mat_features)
+    distance = EuclideanDistance(sg_img_mat_features, sg_img_mat_features)
 
-	kmeans = KMeans(k, distance)
-	kmeans.train()
-	cluster_centers = (kmeans.get_cluster_centers())
-	return cluster_centers 
+    kmeans = KMeans(k, distance)
+    kmeans.train()
+    return (kmeans.get_cluster_centers()) 
 
 
 def get_sift_training(input_dir):
@@ -97,19 +96,12 @@ def compute_training_data(k, cluster_centers, descriptors, input_dir):
 
     # name of all the folders together
     folders=['fashion', 'not_fashion']
-    folder_number=-1
-
-    for folder in folders:
-        folder_number+=1
-
-        #get all the training images from a particular class 
-        directory = input_dir + "/%s " % folder
-        im_list = -1
-        for image_name in os.listdir(input_dir):
-            im_list += 1
-            
+    for folder_number, folder in enumerate(folders):
+        #get all the training images from a particular class
+        directory = f"{input_dir}/{folder} "
+        for im_list, _ in enumerate(os.listdir(input_dir)):
             des=descriptors[folder_number][im_list]
-            
+
             #Shogun works in a way in which columns are samples and rows are features.
             #Hence we need to transpose the observation matrix
             des=(np.double(des)).T
@@ -118,11 +110,7 @@ def compute_training_data(k, cluster_centers, descriptors, input_dir):
             #find all the labels of cluster_centers that are nearest to the descriptors present in the current image. 
             cluster_labels=(knn.apply_multiclass(sg_des)).get_labels()
 
-            histogram_per_image=[]
-            for i in xrange(k):
-                #find the histogram for the current image
-                histogram_per_image.append(sum(cluster_labels==i))
-
+            histogram_per_image = [sum(cluster_labels==i) for i in xrange(k)]
             all_histograms.append(np.array(histogram_per_image))
             final_labels.append(folder_number)
 
@@ -148,12 +136,12 @@ def classify_svm(k, knn, des_testing, input_dir):
     # a list to hold histograms of all the test images
     all_histograms=[]
     filenames=get_imlist(input_dir)
-    
+
     for image_name in xrange(len(filenames[0])):
         
         result=[]
         des=des_testing[image_name]
-        
+
         #Shogun works in a way in which columns are samples and rows are features.
         #Hence we need to transpose the observation matrix
         des=(np.double(des)).T
@@ -162,11 +150,7 @@ def classify_svm(k, knn, des_testing, input_dir):
         #cluster all the above found descriptors into the vocabulary
         cluster_labels=(knn.apply_multiclass(sg_des)).get_labels()
 
-        #get the histogram for the current test image
-        histogram=[]
-        for i in xrange(k):
-            histogram.append(sum(cluster_labels==i))
-        
+        histogram = [sum(cluster_labels==i) for i in xrange(k)]
         all_histograms.append(np.array(histogram))
 
     all_histograms=np.double(np.array(all_histograms))

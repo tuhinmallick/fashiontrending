@@ -143,10 +143,7 @@ def write_bad(input_name, output_name, threshold):
 	data = {}
 	with open(input_name, 'rb') as data_file:    
 		data = json.load(data_file)
-	bad_list = []
-	for key, value in data.iteritems():
-		if value < threshold:
-			bad_list.append(key)
+	bad_list = [key for key, value in data.iteritems() if value < threshold]
 	with open(output_name, 'wb') as fp:
 		for elem in bad_list:
 			string = '%s \n' % elem

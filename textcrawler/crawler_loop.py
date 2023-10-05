@@ -7,11 +7,10 @@ def get_info():
 	# this is graces access token. may replace
 	access_token = ""
 	# retrieves recent posts that are tagged with the word "fashion"
-	tag_url = "https://api.instagram.com/v1/tags/fashion/media/recent?access_token=" + access_token
+	tag_url = f"https://api.instagram.com/v1/tags/fashion/media/recent?access_token={access_token}"
 	# get instagram information
 	handle = urllib.urlopen(tag_url)
-	media_info = handle.read()
-	return media_info
+	return handle.read()
 
 def get_tags(media_info, tag_dict):
 	"""

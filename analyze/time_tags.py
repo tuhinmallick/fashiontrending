@@ -29,7 +29,7 @@ def load_tag_counts(datafile):
                 tag_counts[tag].append(count)
     times = [datetime.datetime(*time.strptime(x, '%Y-%m-%d-%H-%M-%S')[:6]) for x in reversed(times)]
     for tag, counts in tag_counts.items():
-        tag_counts[tag] = counts[0:len(times)]
+        tag_counts[tag] = counts[:len(times)]
     return times, tag_counts
 
 if __name__=='__main__':
