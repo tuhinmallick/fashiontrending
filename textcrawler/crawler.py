@@ -8,15 +8,15 @@ def main():
 	# holds all the tags and occurences
 	tag_dict = {}
 	textfile = file('tag_crawler_output.txt','wt')
-	
+
 	# retrieve data from instagram every 10 seconds
-	for i in xrange(10):
+	for _ in xrange(10):
 		# every 10 seconds, gather information regarding fashion posts
 		time.sleep(10)
 		media_info = get_info()
 		get_tags(media_info, tag_dict)
-	for key in tag_dict.keys():
-		strr = str(key) + " , " + str(tag_dict[key]) + "\n"
+	for key in tag_dict:
+		strr = f"{str(key)} , {str(tag_dict[key])}" + "\n"
 		textfile.write(strr)
 
 	textfile.close()

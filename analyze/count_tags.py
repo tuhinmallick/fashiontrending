@@ -49,7 +49,6 @@ if __name__ == '__main__':
 	all_posts_lst = []
 	i = 0
 	for filename in os.listdir(data_folder):
-		posts_lst = read_posts(data_folder+"/"+filename)
-		for posts in posts_lst:
-			all_posts_lst.append(posts)
+		posts_lst = read_posts(f"{data_folder}/{filename}")
+		all_posts_lst.extend(iter(posts_lst))
 	count_all_tags(all_posts_lst)

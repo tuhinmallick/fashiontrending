@@ -73,27 +73,21 @@ def get_similar_descriptors(k, descriptor_mat):
     kmeans=KMeans(k, distance)
     kmeans.train()
 
-    #get the cluster centers.
-    cluster_centers=(kmeans.get_cluster_centers())
-    
-    return cluster_centers
+    return (kmeans.get_cluster_centers())
 
 
 def get_sift_training():
     folders=['selfie', 'single' ,'group', 'fashion_items', 'food', 'outdoors', 'pets', 'gadgets', 'captioned' ]
     sift = cv2.SIFT()
 
-    
-    folder_number=-1
-    des_training=[]
-      
-    for folder in folders:
-        folder_number+=1
 
-        #get all the training images from a particular class 
-        filenames=get_imlist('data_images/training/%s'%folder)
+    des_training=[]
+
+    for folder_number, folder in enumerate(folders, start=-1):
+        #get all the training images from a particular class
+        filenames = get_imlist(f'data_images/training/{folder}')
         filenames=np.array(filenames)
-        
+
         des_per_folder=[]
         for image_name in filenames[0]:
             img=cv2.imread(image_name)
@@ -106,7 +100,7 @@ def get_sift_training():
             #get all the SIFT descriptors for an image
             _, des=sift.detectAndCompute(gray, None)
             des_per_folder.append(des)
-    
+
         des_training.append(des_per_folder)
     return des_training
 def compute_training_data(k, cluster_centers, descriptors):
@@ -131,16 +125,13 @@ def compute_training_data(k, cluster_centers, descriptors):
 
     # name of all the folders together
     folders=['selfie', 'single', 'group', 'fashion_items', 'food', 'outdoors', 'pets', 'gadgets', 'captioned' ]
-    folder_number=-1
-    for folder in folders:
-        folder_number+=1
-
-        #get all the training images from a particular class 
-        filenames=get_imlist('data_images/training/%s'%folder)
+    for folder_number, folder in enumerate(folders):
+        #get all the training images from a particular class
+        filenames = get_imlist(f'data_images/training/{folder}')
 
         for image_name in xrange(len(filenames[0])):
             des=descriptors[folder_number][image_name]
-            
+
             #Shogun works in a way in which columns are samples and rows are features.
             #Hence we need to transpose the observation matrix
             des=(np.double(des)).T
@@ -149,11 +140,7 @@ def compute_training_data(k, cluster_centers, descriptors):
             #find all the labels of cluster_centers that are nearest to the descriptors present in the current image. 
             cluster_labels=(knn.apply_multiclass(sg_des)).get_labels()
 
-            histogram_per_image=[]
-            for i in xrange(k):
-                #find the histogram for the current image
-                histogram_per_image.append(sum(cluster_labels==i))
-
+            histogram_per_image = [sum(cluster_labels==i) for i in xrange(k)]
             all_histograms.append(np.array(histogram_per_image))
             final_labels.append(folder_number)
 
@@ -207,25 +194,21 @@ def get_sift_testing(folder):
 def get_sift_file(filename):
     
     
-    testing_sample = []
     # testing_sample.append(cv2.imread(filename))
     temp = cv2.imread(filename)
-    testing_sample.append(temp)
+    testing_sample = [temp]
     arr = np.array(filename)
-    des_testing = []
     img = cv2.imread(filename)
     gray= cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     gray=cv2.resize(gray, (500, 300), interpolation=cv2.INTER_AREA)
     gray=cv2.equalizeHist(gray)
     sift = cv2.SIFT()
 
-        #compute all the descriptors of the test images
     _, des=sift.detectAndCompute(gray, None)
-    des_testing.append(des)
+    des_testing = [des]
     return testing_sample, des_testing
 
 def classify_image(k, knn, des_testing, filename, gsvm):
-    all_histograms=[]
     image_name = filename
     # des = des_testing[0]
     des = des_testing[0]
@@ -235,12 +218,8 @@ def classify_image(k, knn, des_testing, filename, gsvm):
     sg_des=RealFeatures((des))
     # print sg_des
     cluster_labels=(knn.apply_multiclass(sg_des)).get_labels()
-    #get the histogram for the current test image
-    histogram=[]
-    for i in xrange(k):
-        histogram.append(sum(cluster_labels==i))
-
-    all_histograms.append(np.array(histogram))
+    histogram = [sum(cluster_labels==i) for i in xrange(k)]
+    all_histograms = [np.array(histogram)]
     all_histograms=np.double(np.array(all_histograms))
     all_histograms=all_histograms.T
     sg_testfeatures=RealFeatures(all_histograms)
@@ -252,12 +231,12 @@ def classify_svm(k, knn, des_testing, folder, gsvm):
     
     # a list to hold histograms of all the test images
     all_histograms=[]
-    filenames=get_imlist('data_images/testing')    
+    filenames=get_imlist('data_images/testing')
     for image_name in xrange(len(filenames[0])):
         
         result=[]
         des=des_testing[image_name]
-        
+
         #Shogun works in a way in which columns are samples and rows are features.
         #Hence we need to transpose the observation matrix
         des=(np.float64(des)).T
@@ -265,11 +244,7 @@ def classify_svm(k, knn, des_testing, folder, gsvm):
         sg_des=RealFeatures(np.array(des))
         cluster_labels=(knn.apply_multiclass(sg_des)).get_labels()
 
-        #get the histogram for the current test image
-        histogram=[]
-        for i in xrange(k):
-            histogram.append(sum(cluster_labels==i))
-        
+        histogram = [sum(cluster_labels==i) for i in xrange(k)]
         all_histograms.append(np.array(histogram))
 
     all_histograms=np.double(np.array(all_histograms))
@@ -279,7 +254,7 @@ def classify_svm(k, knn, des_testing, folder, gsvm):
 
 
 def create_conf_matrix(expected, predicted, n_classes):
-    m = [[0] * n_classes for i in range(n_classes)]
+    m = [[0] * n_classes for _ in range(n_classes)]
     for pred, exp in zip(predicted, expected):
         m[exp][int(pred)] += 1
     return np.array(m)
@@ -288,18 +263,14 @@ def create_expected():
     filenames=get_imlist('data_images/testing')
     # get the formation of the files, later to be used for calculating the confusion matrix
     formation=([int(''.join(x for x in filename if x.isdigit())) for filename in filenames[0]])
-        
+
     # associate them with the correct labels by making a dictionary
     keys=range(len(filenames[0]))
 
     values=[0, 2, 0, 2, 2, 2, 2, 2, 1, 0, 2, 2, 2, 2, 2, 1, 2, 2, 2, 0, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 0, 2, 5, 0, 2, 0, 0, 2, 1, 2, 2, 0, 2, 2, 1, 2, 0, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 6, 0, 3, 0, 0, 5, 0, 0, 0, 4, 6, 6, 0, 0, 0, 0, 0, 6, 0, 1, 0, 0, 1, 4, 4, 4, 2, 0, 2, 6, 0, 2, 6, 1, 0, 0, 0, 3, 0, 6, 5, 6, 1, 6, 4, 6, 1, 0, 0, 0, 1, 6, 2, 2, 6, 4, 4, 2, 1, 2, 4, 2, 0]
     label_dict=dict(zip(keys, values))
 
-    # the following list holds the actual labels
-    expected=[]
-    for i in formation:
-        expected.append(label_dict[i-1])
-    return expected
+    return [label_dict[i-1] for i in formation]
 
 def showfig(image, ucmap):
 

@@ -36,10 +36,7 @@ def detect_trend(post):
 	plt.show()
 
 def filter_posts(user_posts):
-	filtered_posts = []
-	for post in user_posts:
-		if post.comment_count > 50:
-			filtered_posts.append(post)
+	filtered_posts = [post for post in user_posts if post.comment_count > 50]
 	pickle.dump(filtered_posts, open('temp_shares', 'wb'))
 
 

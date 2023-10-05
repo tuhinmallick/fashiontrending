@@ -93,16 +93,14 @@ def save_media(day_media, output_file):
 
 def save_topmedia(top_media, output_file):
     with open(output_file, 'w') as f:
-        index = 1
         f.write("{\n")
-        for (tag, items) in top_media:
+        for index, (tag, items) in enumerate(top_media, start=1):
             f.write("\"popularitem_title%d\": \"%s\",\n" %(index, tag))
             for media_index, media in enumerate(items):
                 f.write("\"popularitem%d_image%d\": \"%s\"" %(index, media_index+1, media.images['standard_resolution'].url))
                 if index != len(top_media) or media_index != len(items)-1:
                     f.write(",")
                 f.write("\n")
-            index += 1
         f.write("}")
 
 def save_top_users(all_media, output_file):
@@ -166,7 +164,7 @@ def load_tag_counts(data_file):
                 tag_counts[tag].append(count)
     times = [datetime.datetime(*time.strptime(x, '%Y-%m-%d-%H-%M-%S')[:6]) for x in times]
     for tag, counts in tag_counts.items():
-        tag_counts[tag] = counts[0:len(times)]
+        tag_counts[tag] = counts[:len(times)]
     return times, tag_counts
 
 def get_top_tags(df):
